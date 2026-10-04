@@ -1,4 +1,4 @@
--- [[ Vanta Hub : Steal an Egg (Absolute Force Speed) ]] --
+-- [[ Vanta Hub : Balanced Safe Speed for Egg Delivery ]] --
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -18,7 +18,7 @@ MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
 MainFrame.BorderSizePixel = 0
 MainFrame.Position = UDim2.new(0.5, -160, 0.5, -130)
-MainFrame.Size = UDim2.new(0, 320, 0, 260)
+MainFrame.Size = UDim2.new(0, 320, 0, 240)
 MainFrame.Active = true
 MainFrame.Draggable = true
 
@@ -42,7 +42,7 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0.04, 0, 0, 0)
 Title.Size = UDim2.new(0.8, 0, 1, 0)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "Vanta Hub ⚡ [Absolute Speed]"
+Title.Text = "Vanta Hub ⚡ [Smart Speed]"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -70,7 +70,7 @@ Container.Parent = MainFrame
 Container.BackgroundTransparency = 1
 Container.Position = UDim2.new(0, 10, 0, 50)
 Container.Size = UDim2.new(1, -20, 1, -60)
-Container.CanvasSize = UDim2.new(0, 0, 1.3, 0)
+Container.CanvasSize = UDim2.new(0, 0, 1.2, 0)
 Container.ScrollBarThickness = 4
 
 local UIListLayout = Instance.new("UIListLayout")
@@ -102,30 +102,16 @@ local function createButton(text, callback)
 end
 
 local speedEnabled = false
-local currentSpeed = 3 -- معامل الدفع المباشر
+local currentSpeed = 35 -- سرعة سريعة لكنها لا تثير شك السيرفر مع البيض
 
-local SpeedToggleBtn = createButton("السرعة المطلقة: [ متوقف ❌ ]", function()
+local SpeedToggleBtn = createButton("السرعة الذكية: [ متوقف ❌ ]", function()
     speedEnabled = not speedEnabled
     if speedEnabled then
-        SpeedToggleBtn.Text = "السرعة المطلقة: [ شغال 🔥 ]"
+        SpeedToggleBtn.Text = "السرعة الذكية: [ شغال 🔥 ] (" .. currentSpeed .. ")"
         SpeedToggleBtn.TextColor3 = Color3.fromRGB(100, 255, 100)
     else
-        SpeedToggleBtn.Text = "السرعة المطلقة: [ متوقف ❌ ]"
+        SpeedToggleBtn.Text = "السرعة الذكية: [ متوقف ❌ ]"
         SpeedToggleBtn.TextColor3 = Color3.fromRGB(230, 230, 230)
-    end
-end)
-
-createButton("زيادة طاقة الاندفاع (+1)", function()
-    if currentSpeed < 10 then
-        currentSpeed = currentSpeed + 1
-        print("قوة الاندفاع الحالية: " .. currentSpeed)
-    end
-end)
-
-createButton("تقليل طاقة الاندفاع (-1)", function()
-    if currentSpeed > 1 then
-        currentSpeed = currentSpeed - 1
-        print("قوة الاندفاع الحالية: " .. currentSpeed)
     end
 end)
 
@@ -148,19 +134,16 @@ createButton("تفعيل رادار البيض (ESP) 👁️", function()
     end)
 end)
 
--- محرك الدفع المباشر للإحداثيات (CFrame Force Offset)
-RunService.RenderStepped:Connect(function(dt)
+-- تعديل الـ WalkSpeed بالطريقة الكلاسيكية الآمنة للبيض بدل القفزات الوهمية
+RunService.Heartbeat:Connect(function()
     if speedEnabled then
         pcall(function()
             local char = LocalPlayer.Character
-            if char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChild("Humanoid") then
-                if char.Humanoid.MoveDirection.Magnitude > 0 then
-                    local hrp = char.HumanoidRootPart
-                    hrp.CFrame = hrp.CFrame + (char.Humanoid.MoveDirection * (currentSpeed * dt * 60))
-                end
+            if char and char:FindFirstChild("Humanoid") then
+                char.Humanoid.WalkSpeed = currentSpeed
             end
         end)
     end
 end)
 
-print("تم تفعيل نظام الدفع المباشر للسرعة!")
+print("تم تفعيل نظام السرعة المتوازنة لتجنب خسارة البيض!")
