@@ -1,4 +1,4 @@
--- [[ VANTA - Roblox Universal Hub (Complete Code) ]] --
+-- [[ VANTA - Roblox Universal Hub (With Speed Slider & UI Toggle) ]] --
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -22,8 +22,8 @@ MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 MainFrame.BorderSizePixel = 0
-MainFrame.Position = UDim2.new(0.5, -150, 0.5, -185)
-MainFrame.Size = UDim2.new(0, 300, 0, 390)
+MainFrame.Position = UDim2.new(0.5, -150, 0.5, -210)
+MainFrame.Size = UDim2.new(0, 300, 0, 440)
 MainFrame.Active = true
 MainFrame.Draggable = true
 
@@ -55,10 +55,10 @@ ToggleUiBtn.MouseButton1Click:Connect(function()
 			child.Visible = uiVisible
 		end
 	end
-	MainFrame.Size = uiVisible and UDim2.new(0, 300, 0, 390) or UDim2.new(0, 300, 0, 85)
+	MainFrame.Size = uiVisible and UDim2.new(0, 300, 0, 440) or UDim2.new(0, 300, 0, 85)
 end)
 
--- دالة مساعدة للأزرار
+-- دالة مساعدة للأزرار العادية
 local function createButton(name, posY, callback)
 	local btn = Instance.new("TextButton")
 	btn.Parent = MainFrame
@@ -81,6 +81,69 @@ local function createButton(name, posY, callback)
 			btn.TextColor3 = Color3.fromRGB(200, 200, 200)
 		end
 		callback(active)
+	end)
+end
+
+-- دالة إنشاء شريط التحكم في السرعة (Speed Slider Bar)
+local currentSpeed = 16
+local speedEnabled = false
+
+local function createSlider(name, posY, min, max, callback)
+	local container = Instance.new("Frame")
+	container.Parent = MainFrame
+	container.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+	container.Position = UDim2.new(0, 25, 0, posY)
+	container.Size = UDim2.new(0, 250, 0, 50)
+	container.BorderSizePixel = 0
+	
+	local label = Instance.new("TextLabel")
+	label.Parent = container
+	label.BackgroundTransparency = 1
+	label.Size = UDim2.new(1, 0, 0, 20)
+	label.Font = Enum.Font.SourceSansBold
+	label.Text = name .. ": 16"
+	label.TextColor3 = Color3.fromRGB(200, 200, 200)
+	label.TextSize = 14
+	
+	local sliderBar = Instance.new("Frame")
+	sliderBar.Parent = container
+	sliderBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+	sliderBar.Position = UDim2.new(0, 10, 0, 30)
+	sliderBar.Size = UDim2.new(0, 230, 0, 10)
+	sliderBar.BorderSizePixel = 0
+	
+	local sliderFill = Instance.new("Frame")
+	sliderFill.Parent = sliderBar
+	sliderFill.BackgroundColor3 = Color3.fromRGB(0, 120, 60)
+	sliderFill.Size = UDim2.new(0, 0, 1, 0)
+	sliderFill.BorderSizePixel = 0
+	
+	local dragging = false
+	
+	sliderBar.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true
+		end
+	end)
+	
+	UserInputService.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = false
+		end
+	end)
+	
+	UserInputService.InputChanged:Connect(function(input)
+		if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+			local mousePos = UserInputService:GetMouseLocation().X
+			local barPos = sliderBar.AbsolutePosition.X
+			local barSize = sliderBar.AbsoluteSize.X
+			local clamp = math.clamp((mousePos - barPos) / barSize, 0, 1)
+			
+			sliderFill.Size = UDim2.new(clamp, 0, 1, 0)
+			local value = math.floor(min + (max - min) * clamp)
+			label.Text = name .. ": " .. value
+			callback(value)
+		end
 	end)
 end
 
@@ -179,10 +242,13 @@ createButton("Toggle Noclip", 195, function(state)
 	end
 end)
 
--- 4. تعديل السرعة (طريقة السرعة الفيزيائية لتتخطى الحماية)
-local speedEnabled = false
-createButton("Toggle Speed (50)", 245, function(state)
+-- 4. زر تفعيل السرعة + بار التحكم (Slider)
+createButton("Enable Speed Hack", 245, function(state)
 	speedEnabled = state
+end)
+
+createSlider("Speed Value", 295, 16, 200, function(val)
+	currentSpeed = val
 end)
 
 RunService.RenderStepped:Connect(function()
@@ -190,14 +256,14 @@ RunService.RenderStepped:Connect(function()
 		local hrp = LocalPlayer.Character.HumanoidRootPart
 		local hum = LocalPlayer.Character.Humanoid
 		if hum.MoveDirection.Magnitude > 0 then
-			hrp.AssemblyLinearVelocity = Vector3.new(hum.MoveDirection.X * 50, hrp.AssemblyLinearVelocity.Y, hum.MoveDirection.Z * 50)
+			hrp.AssemblyLinearVelocity = Vector3.new(hum.MoveDirection.X * currentSpeed, hrp.AssemblyLinearVelocity.Y, hum.MoveDirection.Z * currentSpeed)
 		end
 	end
 end)
 
 -- 5. القفز العالي
 local jumpEnabled = false
-createButton("Toggle Jump (150)", 295, function(state)
+createButton("Toggle Jump (150)", 360, function(state)
 	jumpEnabled = state
 end)
 
