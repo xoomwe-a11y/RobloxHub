@@ -1,316 +1,189 @@
--- [[ VANTA - Roblox Universal Hub (Ultimate Anti-Cheat Bypass) ]] --
-
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
+-- واجهة Steal an Egg Hub المحدثة مع Auto-Farm و Teleport
 local CoreGui = game:GetService("CoreGui")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local Camera = workspace.CurrentCamera
 
-if CoreGui:FindFirstChild("VantaHub") then
-	CoreGui.VantaHub:Destroy()
+-- إزالة أي واجهة قديمة لمنع التكرار
+if CoreGui:FindFirstChild("StealAnEggHub") then
+    CoreGui.StealAnEggHub:Destroy()
 end
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "VantaHub"
+ScreenGui.Name = "StealAnEggHub"
 ScreenGui.Parent = CoreGui
-ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- إطار بتصميم عصري
+-- الإطار الرئيسي
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
-MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 MainFrame.BorderSizePixel = 0
-MainFrame.Position = UDim2.new(0.5, -140, 0.5, -225)
-MainFrame.Size = UDim2.new(0, 280, 0, 450)
+MainFrame.Position = UDim2.new(0.5, -225, 0.5, -160)
+MainFrame.Size = UDim2.new(0, 450, 0, 320)
 MainFrame.Active = true
 MainFrame.Draggable = true
 
-local UICornerMain = Instance.new("UICorner")
-UICornerMain.CornerRadius = UDim.new(0, 12)
-UICornerMain.Parent = MainFrame
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 10)
+UICorner.Parent = MainFrame
 
-local UIStrokeMain = Instance.new("UIStroke")
-UIStrokeMain.Color = Color3.fromRGB(45, 45, 55)
-UIStrokeMain.Thickness = 1.5
-UIStrokeMain.Parent = MainFrame
+-- شريط العناوين العلوي
+local TopBar = Instance.new("Frame")
+TopBar.Name = "TopBar"
+TopBar.Parent = MainFrame
+TopBar.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
+TopBar.BorderSizePixel = 0
+TopBar.Size = UDim2.new(1, 0, 0, 40)
 
--- شريط العنوان العلوي
+local TopCorner = Instance.new("UICorner")
+TopCorner.CornerRadius = UDim.new(0, 10)
+TopCorner.Parent = TopBar
+
 local Title = Instance.new("TextLabel")
-Title.Parent = MainFrame
-Title.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
-Title.Size = UDim2.new(1, 0, 0, 45)
+Title.Parent = TopBar
+Title.BackgroundTransparency = 1
+Title.Position = UDim2.new(0.03, 0, 0, 0)
+Title.Size = UDim2.new(0.7, 0, 1, 0)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "⚡ VANTA HUB ⚡"
+Title.Text = "Steal An Egg Hub | Pro Max"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 16
+Title.TextXAlignment = Enum.TextXAlignment.Left
 
-local UICornerTitle = Instance.new("UICorner")
-UICornerTitle.CornerRadius = UDim.new(0, 12)
-UICornerTitle.Parent = Title
+-- زر إغلاق الواجهة
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Parent = TopBar
+CloseBtn.BackgroundColor3 = Color3.fromRGB(230, 50, 50)
+CloseBtn.Position = UDim2.new(0.9, 0, 0.15, 0)
+CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.Text = "X"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.TextSize = 14
 
--- زر إخفاء وإظهار القائمة
-local ToggleUiBtn = Instance.new("TextButton")
-ToggleUiBtn.Parent = MainFrame
-ToggleUiBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
-ToggleUiBtn.Position = UDim2.new(0, 15, 0, 55)
-ToggleUiBtn.Size = UDim2.new(0, 250, 0, 35)
-ToggleUiBtn.Font = Enum.Font.GothamBold
-ToggleUiBtn.Text = "Hide / Show UI"
-ToggleUiBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleUiBtn.TextSize = 14
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 6)
+CloseCorner.Parent = CloseBtn
 
-local UICornerToggle = Instance.new("UICorner")
-UICornerToggle.CornerRadius = UDim.new(0, 8)
-UICornerToggle.Parent = ToggleUiBtn
-
-local uiVisible = true
-ToggleUiBtn.MouseButton1Click:Connect(function()
-	uiVisible = not uiVisible
-	for _, child in ipairs(MainFrame:GetChildren()) do
-		if child ~= Title and child ~= ToggleUiBtn and child ~= UICornerMain and child ~= UIStrokeMain then
-			child.Visible = uiVisible
-		end
-	end
-	MainFrame.Size = uiVisible and UDim2.new(0, 280, 0, 450) or UDim2.new(0, 280, 0, 100)
+CloseBtn.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
 end)
 
-local function createButton(name, posY, callback)
-	local btn = Instance.new("TextButton")
-	btn.Parent = MainFrame
-	btn.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
-	btn.Position = UDim2.new(0, 15, 0, posY)
-	btn.Size = UDim2.new(0, 250, 0, 38)
-	btn.Font = Enum.Font.GothamBold
-	btn.Text = name
-	btn.TextColor3 = Color3.fromRGB(210, 210, 210)
-	btn.TextSize = 14
-	
-	local UICornerBtn = Instance.new("UICorner")
-	UICornerBtn.CornerRadius = UDim.new(0, 8)
-	UICornerBtn.Parent = btn
-	
-	local active = false
-	btn.MouseButton1Click:Connect(function()
-		active = not active
-		if active then
-			btn.BackgroundColor3 = Color3.fromRGB(0, 150, 80)
-			btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-		else
-			btn.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
-			btn.TextColor3 = Color3.fromRGB(210, 210, 210)
-		end
-		callback(active)
-	end)
+-- حاوية الأزرار القابلة للتمرير
+local Container = Instance.new("ScrollingFrame")
+Container.Parent = MainFrame
+Container.BackgroundTransparency = 1
+Container.Position = UDim2.new(0, 10, 0, 50)
+Container.Size = UDim2.new(1, -20, 1, -60)
+Container.CanvasSize = UDim2.new(0, 0, 2, 0)
+Container.ScrollBarThickness = 4
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Parent = Container
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 10)
+
+-- دالة مساعدة لإنشاء الأزرار بسلاسة
+local function createButton(text, callback)
+    local btn = Instance.new("TextButton")
+    btn.Parent = Container
+    btn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    btn.Size = UDim2.new(1, 0, 0, 40)
+    btn.Font = Enum.Font.GothamSemibold
+    btn.Text = text
+    btn.TextColor3 = Color3.fromRGB(220, 220, 220)
+    btn.TextSize = 14
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = btn
+    
+    btn.MouseButton1Click:Connect(function()
+        pcall(callback)
+        btn.BackgroundColor3 = Color3.fromRGB(60, 120, 200)
+        task.wait(0.15)
+        btn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    end)
 end
 
--- بار التحكم بالسرعة
-local currentSpeed = 50
+-- 1. تفعيل السرعة الآمنة
 local speedEnabled = false
-
-local function createSlider(name, posY, min, max, callback)
-	local container = Instance.new("Frame")
-	container.Parent = MainFrame
-	container.BackgroundColor3 = Color3.fromRGB(25, 25, 32)
-	container.Position = UDim2.new(0, 15, 0, posY)
-	container.Size = UDim2.new(0, 250, 0, 50)
-	container.BorderSizePixel = 0
-	
-	local UICornerContainer = Instance.new("UICorner")
-	UICornerContainer.CornerRadius = UDim.new(0, 8)
-	UICornerContainer.Parent = container
-	
-	local label = Instance.new("TextLabel")
-	label.Parent = container
-	label.BackgroundTransparency = 1
-	label.Position = UDim2.new(0, 10, 0, 5)
-	label.Size = UDim2.new(1, -20, 0, 20)
-	label.Font = Enum.Font.GothamBold
-	label.Text = name .. ": 50"
-	label.TextColor3 = Color3.fromRGB(210, 210, 210)
-	label.TextSize = 13
-	
-	local sliderBar = Instance.new("Frame")
-	sliderBar.Parent = container
-	sliderBar.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-	sliderBar.Position = UDim2.new(0, 10, 0, 32)
-	sliderBar.Size = UDim2.new(0, 230, 0, 8)
-	sliderBar.BorderSizePixel = 0
-	
-	local UICornerBar = Instance.new("UICorner")
-	UICornerBar.CornerRadius = UDim.new(0, 4)
-	UICornerBar.Parent = sliderBar
-	
-	local sliderFill = Instance.new("Frame")
-	sliderFill.Parent = sliderBar
-	sliderFill.BackgroundColor3 = Color3.fromRGB(0, 170, 90)
-	sliderFill.Size = UDim2.new(0, 0, 1, 0)
-	sliderFill.BorderSizePixel = 0
-	
-	local UICornerFill = Instance.new("UICorner")
-	UICornerFill.CornerRadius = UDim.new(0, 4)
-	UICornerFill.Parent = sliderFill
-	
-	local dragging = false
-	
-	sliderBar.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 then
-			dragging = true
-		end
-	end)
-	
-	UserInputService.InputEnded:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 then
-			dragging = false
-		end
-	end)
-	
-	UserInputService.InputChanged:Connect(function(input)
-		if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-			local mousePos = UserInputService:GetMouseLocation().X
-			local barPos = sliderBar.AbsolutePosition.X
-			local barSize = sliderBar.AbsoluteSize.X
-			local clamp = math.clamp((mousePos - barPos) / barSize, 0, 1)
-			
-			sliderFill.Size = UDim2.new(clamp, 0, 1, 0)
-			local value = math.floor(min + (max - min) * clamp)
-			label.Text = name .. ": " .. value
-			callback(value)
-		end
-	end)
-end
-
--- 1. ESP
-local espEnabled = false
-local espObjects = {}
-
-local function toggleESP(state)
-	espEnabled = state
-	if not espEnabled then
-		for _, box in pairs(espObjects) do
-			if box then box:Remove() end
-		end
-		espObjects = {}
-	end
-end
-
-RunService.RenderStepped:Connect(function()
-	if not espEnabled then return end
-	for _, player in ipairs(Players:GetPlayers()) do
-		if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-			local hrp = player.Character.HumanoidRootPart
-			local pos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
-			
-			if not espObjects[player] then
-				local box = Drawing.new("Square")
-				box.Visible = false
-				box.Color = Color3.fromRGB(255, 50, 50)
-				box.Thickness = 2
-				box.Filled = false
-				espObjects[player] = box
-			end
-			
-			local box = espObjects[player]
-			if onScreen then
-				box.Size = Vector2.new(2000 / pos.Z, 3000 / pos.Z)
-				box.Position = Vector2.new(pos.X - box.Size.X / 2, pos.Y - box.Size.Y / 2)
-				box.Visible = true
-			else
-				box.Visible = false
-			end
-		elseif espObjects[player] then
-			espObjects[player].Visible = false
-		end
-	end
-end)
-createButton("Toggle ESP", 100, toggleESP)
-
--- 2. Aimbot
-local aimbotEnabled = false
-createButton("Toggle Aimbot", 145, function(state)
-	aimbotEnabled = state
+createButton("تفعيل السرعة الآمنة (Speed Boost)", function()
+    speedEnabled = not speedEnabled
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChild("Humanoid") then
+        char.Humanoid.WalkSpeed = speedEnabled and 28 or 16
+    end
 end)
 
-RunService.RenderStepped:Connect(function()
-	if aimbotEnabled and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
-		local closestPlayer = nil
-		local shortestDistance = math.huge
-		
-		for _, player in ipairs(Players:GetPlayers()) do
-			if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
-				local pos, onScreen = Camera:WorldToViewportPoint(player.Character.Head.Position)
-				if onScreen then
-					local magnitude = (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)).Magnitude
-					if magnitude < shortestDistance then
-						shortestDistance = magnitude
-						closestPlayer = player
-					end
-				end
-			end
-		end
-		
-		if closestPlayer and closestPlayer.Character and closestPlayer.Character:FindFirstChild("Head") then
-			Camera.CFrame = CFrame.new(Camera.CFrame.Position, closestPlayer.Character.Head.Position)
-		end
-	end
+-- 2. إظهار أماكن البيض (ESP)
+createButton("إظهار أماكن البيض (Egg ESP)", function()
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj.Name:lower():find("egg") and obj:IsA("BasePart") then
+            if not obj:FindFirstChild("EggHighlight") then
+                local highlight = Instance.new("Highlight")
+                highlight.Name = "EggHighlight"
+                highlight.Adornee = obj
+                highlight.FillColor = Color3.fromRGB(0, 255, 128)
+                highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                highlight.Parent = obj
+            end
+        end
+    end
 end)
 
--- 3. Noclip
-local noclipConnection
-createButton("Toggle Noclip", 190, function(state)
-	if state then
-		noclipConnection = RunService.Stepped:Connect(function()
-			if LocalPlayer.Character then
-				for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
-					if part:IsA("BasePart") then
-						part.CanCollide = false
-					end
-				end
-			end
-		end)
-	else
-		if noclipConnection then
-			noclipConnection:Disconnect()
-		end
-	end
+-- 3. التجميع التلقائي للبيض القريب (Auto-Farm Eggs)
+local autoFarmActive = false
+createButton("التجميع التلقائي للبيض (Auto-Farm)", function()
+    autoFarmActive = not autoFarmActive
+    task.spawn(function()
+        while autoFarmActive do
+            task.wait(0.5)
+            pcall(function()
+                local char = LocalPlayer.Character
+                if char and char:FindFirstChild("HumanoidRootPart") then
+                    for _, obj in pairs(workspace:GetDescendants()) do
+                        if not autoFarmActive then break end
+                        if obj.Name:lower():find("egg") and obj:IsA("BasePart") then
+                            -- انتقال تدريجي وآمن لمكان البيضة
+                            char.HumanoidRootPart.CFrame = obj.CFrame + Vector3.new(0, 3, 0)
+                            task.wait(0.3)
+                        end
+                    end
+                end
+            end)
+        end
+    end)
 end)
 
--- 4. السرعة الآمنة المانعة للإرجاع (Bypass Anti-Cheat Speed)
-createButton("Enable Speed Hack", 235, function(state)
-	speedEnabled = state
+-- 4. الانتقال السريع لأمان البداية / القاعدة (Teleport to Base)
+createButton("الرجوع السريع للقاعدة (Teleport Base)", function()
+    pcall(function()
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            -- جرب البحث عن نقطة البداية أو العودة في الماب
+            local base = workspace:FindFirstChild("Base") or workspace:FindFirstChild("SpawnLocation")
+            if base then
+                char.HumanoidRootPart.CFrame = base.CFrame + Vector3.new(0, 5, 0)
+            else
+                -- رفع اللاعب قليلاً كبديل آمن لو لم توجد قاعدة محددة بالاسم
+                char.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame + Vector3.new(0, 10, 0)
+            end
+        end
+    end)
 end)
 
-createSlider("Speed Value", 285, 16, 500, function(val)
-	currentSpeed = val
+-- 5. إزالة المؤثرات الثقيلة لزيادة الفريمات
+createButton("تحسين الأداء وإزالة اللاج (Anti-Lag)", function()
+    pcall(function()
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("ParticleEmitter") or v:IsA("Fire") or v:IsA("Smoke") then
+                v.Enabled = false
+            end
+        end
+    end)
 end)
 
-RunService.RenderStepped:Connect(function()
-	if speedEnabled and LocalPlayer.Character then
-		local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-		local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-		if humanoid and hrp then
-			-- تعطيل التحقق باختراق WalkSpeed التقليدي واستخدام تلاعب نظيف بالـ MoveDirection
-			if humanoid.MoveDirection.Magnitude > 0 then
-				hrp.CFrame = hrp.CFrame + (humanoid.MoveDirection * (currentSpeed * 0.05))
-			end
-		end
-	end
-end)
-
--- 5. Jump
-local jumpEnabled = false
-createButton("Toggle Jump (150)", 355, function(state)
-	jumpEnabled = state
-end)
-
-RunService.RenderStepped:Connect(function()
-	if jumpEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-		LocalPlayer.Character.Humanoid.JumpPower = 150
-		LocalPlayer.Character.Humanoid.UseJumpPower = true
-	elseif not jumpEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-		if LocalPlayer.Character.Humanoid.JumpPower == 150 then
-			LocalPlayer.Character.Humanoid.JumpPower = 50
-		end
-	end
-end)
+print("تم تحميل ميزات Auto-Farm و Teleport بنجاح!")
