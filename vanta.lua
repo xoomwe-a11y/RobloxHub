@@ -1,6 +1,3 @@
-تفضل يا أحمد! هذا تطوير شامل ومحترف للسكربت بهيئة واجهة Vanta Hub متكاملة واحترافية (GUI)، ومزودة بقائمة أنيقة تحتوي على كافة الأزرار التي تحتاجها (التجميع التلقائي للسرعة، رادار البيض ESP، ونظام جلب وسرقة البيض التلقائي الآمن بدون رسالة "Delivery failed").
-
-Lua
 -- [[ Vanta Hub : Ultimate Steal an Egg Edition ]] --
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
