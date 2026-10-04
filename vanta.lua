@@ -1,4 +1,4 @@
--- [[ VANTA - Roblox Universal Hub (Modern Redesign & 2500 Speed) ]] --
+-- [[ VANTA - Roblox Universal Hub (Anti-Cheat Bypass Speed) ]] --
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -16,7 +16,7 @@ ScreenGui.Name = "VantaHub"
 ScreenGui.Parent = CoreGui
 ScreenGui.ResetOnSpawn = false
 
--- إطار بتصميم عصري وحواف دائرية
+-- إطار بتصميم عصري
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
@@ -105,8 +105,8 @@ local function createButton(name, posY, callback)
 	end)
 end
 
--- بار التحكم بالسرعة (من 16 إلى 2500)
-local currentSpeed = 16
+-- بار التحكم بالسرعة
+local currentSpeed = 50
 local speedEnabled = false
 
 local function createSlider(name, posY, min, max, callback)
@@ -127,7 +127,7 @@ local function createSlider(name, posY, min, max, callback)
 	label.Position = UDim2.new(0, 10, 0, 5)
 	label.Size = UDim2.new(1, -20, 0, 20)
 	label.Font = Enum.Font.GothamBold
-	label.Text = name .. ": 16"
+	label.Text = name .. ": 50"
 	label.TextColor3 = Color3.fromRGB(210, 210, 210)
 	label.TextSize = 13
 	
@@ -276,7 +276,7 @@ createButton("Toggle Noclip", 190, function(state)
 	end
 end)
 
--- 4. Speed Hack & Slider (السرعة حتى 2500)
+-- 4. Speed Hack الآمن (طريقة CFrame لتجنب الإرجاع)
 createButton("Enable Speed Hack", 235, function(state)
 	speedEnabled = state
 end)
@@ -285,12 +285,13 @@ createSlider("Speed Value", 285, 16, 2500, function(val)
 	currentSpeed = val
 end)
 
-RunService.RenderStepped:Connect(function()
+RunService.Heartbeat:Connect(function(dt)
 	if speedEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and LocalPlayer.Character:FindFirstChild("Humanoid") then
 		local hrp = LocalPlayer.Character.HumanoidRootPart
 		local hum = LocalPlayer.Character.Humanoid
 		if hum.MoveDirection.Magnitude > 0 then
-			hrp.AssemblyLinearVelocity = Vector3.new(hum.MoveDirection.X * currentSpeed, hrp.AssemblyLinearVelocity.Y, hum.MoveDirection.Z * currentSpeed)
+			-- استخدام CFrame لمنع نظام الحماية من كشف السرعة وإرجاعك
+			hrp.CFrame = hrp.CFrame + (hum.MoveDirection * (currentSpeed * dt))
 		end
 	end
 end)
