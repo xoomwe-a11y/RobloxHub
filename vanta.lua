@@ -1,7 +1,6 @@
--- [[ Vanta Hub : Speed Farm & Utilities ]] --
+-- [[ Vanta Hub : Manual Click Speed Increaser ]] --
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
 if CoreGui:FindFirstChild("VantaHubMain") then
@@ -18,7 +17,7 @@ MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
 MainFrame.BorderSizePixel = 0
 MainFrame.Position = UDim2.new(0.5, -160, 0.5, -140)
-MainFrame.Size = UDim2.new(0, 320, 0, 280)
+MainFrame.Size = UDim2.new(0, 320, 0, 260)
 MainFrame.Active = true
 MainFrame.Draggable = true
 
@@ -42,7 +41,7 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0.04, 0, 0, 0)
 Title.Size = UDim2.new(0.8, 0, 1, 0)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "Vanta Hub ⚡ [Speed Stats Farm]"
+Title.Text = "Vanta Hub ⚡ [Manual Clicker]"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 13
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -70,7 +69,7 @@ Container.Parent = MainFrame
 Container.BackgroundTransparency = 1
 Container.Position = UDim2.new(0, 10, 0, 50)
 Container.Size = UDim2.new(1, -20, 1, -60)
-Container.CanvasSize = UDim2.new(0, 0, 1.4, 0)
+Container.CanvasSize = UDim2.new(0, 0, 1.2, 0)
 Container.ScrollBarThickness = 4
 
 local UIListLayout = Instance.new("UIListLayout")
@@ -101,40 +100,24 @@ local function createButton(text, callback)
     return btn
 end
 
--- نظام البحث التلقائي عن ريموت زيادة السرعة/النقاط وإرساله
-local autoFarmActive = false
-local FarmToggleBtn = createButton("تجميع السرعة التلقائي: [ متوقف ❌ ]", function()
-    autoFarmActive = not autoFarmActive
-    if autoFarmActive then
-        FarmToggleBtn.Text = "تجميع السرعة التلقائي: [ شغال 🔥 ]"
-        FarmToggleBtn.TextColor3 = Color3.fromRGB(100, 255, 100)
-    else
-        FarmToggleBtn.Text = "تجميع السرعة التلقائي: [ متوقف ❌ ]"
-        FarmToggleBtn.TextColor3 = Color3.fromRGB(230, 230, 230)
-    end
-end)
-
--- محرك التجميع الخلفي
-task.spawn(function()
-    while true do
-        if autoFarmActive then
-            pcall(function()
-                -- البحث عن أي RemoteEvent خاص بزيادة السرعة أو النقاط في اللعبة وتفعيلها
-                for _, v in pairs(game:GetDescendants()) do
-                    if v:IsA("RemoteEvent") then
-                        local name = v.Name:lower()
-                        if name:find("speed") or name:find("click") or name:find("train") or name:find("step") or name:find("get") then
-                            v:FireServer()
-                        end
-                    end
-                end
-            end)
+-- دالة للبحث عن الـ Remote وإرسال أمر الزيادة بضغطة زر
+local function triggerIncrease()
+    for _, v in pairs(game:GetDescendants()) do
+        if v:IsA("RemoteEvent") then
+            local name = v.Name:lower()
+            if name:find("speed") or name:find("click") or name:find("train") or name:find("step") or name:find("get") then
+                v:FireServer()
+            end
         end
-        task.wait(0.1) -- سرعة التكرار لإضافة النقاط بسرعة هائلة
     end
+end
+
+-- زر الزيادة اليدوية
+createButton("⚡ زيادة العداد (ضغطة وحدة)", function()
+    triggerIncrease()
 end)
 
--- رادار البيض (ESP)
+-- رادار البيض (ESP) للاستفادة منه في اللعبة
 createButton("تفعيل رادار البيض (ESP) 👁️", function()
     pcall(function()
         for _, obj in pairs(workspace:GetDescendants()) do
@@ -154,4 +137,4 @@ createButton("تفعيل رادار البيض (ESP) 👁️", function()
     end)
 end)
 
-print("تم تفعيل نظام مضاعفة عداد السرعة!")
+print("تم تفعيل زر الزيادة اليدوية للعداد!")
