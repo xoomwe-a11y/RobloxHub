@@ -1,10 +1,9 @@
--- [[ Vanta Hub : Steal an Egg (God Speed / Extreme Edition) ]] --
+-- [[ Vanta Hub : Steal an Egg (Absolute Force Speed) ]] --
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
--- إزالة أي نسخة سابقة لمنع التكرار
 if CoreGui:FindFirstChild("VantaHubMain") then
     CoreGui.VantaHubMain:Destroy()
 end
@@ -14,7 +13,6 @@ ScreenGui.Name = "VantaHubMain"
 ScreenGui.Parent = CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- النافذة الرئيسية
 local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
@@ -28,7 +26,6 @@ local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 10)
 UICorner.Parent = MainFrame
 
--- شريط العنوان العلوي
 local TopBar = Instance.new("Frame")
 TopBar.Parent = MainFrame
 TopBar.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
@@ -45,12 +42,11 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0.04, 0, 0, 0)
 Title.Size = UDim2.new(0.8, 0, 1, 0)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "Vanta Hub ⚡ [God Speed]"
+Title.Text = "Vanta Hub ⚡ [Absolute Speed]"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
 
--- زر إغلاق الواجهة
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Parent = TopBar
 CloseBtn.BackgroundColor3 = Color3.fromRGB(210, 45, 45)
@@ -69,7 +65,6 @@ CloseBtn.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
 end)
 
--- حاوية الأزرار
 local Container = Instance.new("ScrollingFrame")
 Container.Parent = MainFrame
 Container.BackgroundTransparency = 1
@@ -83,7 +78,6 @@ UIListLayout.Parent = Container
 UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 UIListLayout.Padding = UDim.new(0, 8)
 
--- دالة إنشاء الأزرار
 local function createButton(text, callback)
     local btn = Instance.new("TextButton")
     btn.Parent = Container
@@ -107,46 +101,36 @@ local function createButton(text, callback)
     return btn
 end
 
--- متغيرات السرعة المفتوحة بحدود صاروخية
 local speedEnabled = false
-local currentSpeed = 100 -- تبدأ من 100 وتصعد للآلاف
+local currentSpeed = 3 -- معامل الدفع المباشر
 
--- 1. زر تشغيل وإيقاف السرعة الصاروخية
-local SpeedToggleBtn = createButton("السرعة الخارقة: [ متوقف ❌ ]", function()
+local SpeedToggleBtn = createButton("السرعة المطلقة: [ متوقف ❌ ]", function()
     speedEnabled = not speedEnabled
     if speedEnabled then
-        SpeedToggleBtn.Text = "السرعة الخارقة: [ شغال 🔥 ] (" .. currentSpeed .. ")"
+        SpeedToggleBtn.Text = "السرعة المطلقة: [ شغال 🔥 ]"
         SpeedToggleBtn.TextColor3 = Color3.fromRGB(100, 255, 100)
     else
-        SpeedToggleBtn.Text = "السرعة الخارقة: [ متوقف ❌ ]"
+        SpeedToggleBtn.Text = "السرعة المطلقة: [ متوقف ❌ ]"
         SpeedToggleBtn.TextColor3 = Color3.fromRGB(230, 230, 230)
     end
 end)
 
--- 2. زر زيادة السرعة بقوة صاروخية (+100)
-createButton("زيادة صاروخية (+100)", function()
-    if currentSpeed < 3000 then
-        currentSpeed = currentSpeed + 100
-        if speedEnabled then
-            SpeedToggleBtn.Text = "السرعة الخارقة: [ شغال 🔥 ] (" .. currentSpeed .. ")"
-        end
+createButton("زيادة طاقة الاندفاع (+1)", function()
+    if currentSpeed < 10 then
+        currentSpeed = currentSpeed + 1
+        print("قوة الاندفاع الحالية: " .. currentSpeed)
     end
 end)
 
--- 3. زر تقليل السرعة (-100)
-createButton("تقليل صاروخي (-100)", function()
-    if currentSpeed > 100 then
-        currentSpeed = currentSpeed - 100
-        if speedEnabled then
-            SpeedToggleBtn.Text = "السرعة الخارقة: [ شغال 🔥 ] (" .. currentSpeed .. ")"
-        end
+createButton("تقليل طاقة الاندفاع (-1)", function()
+    if currentSpeed > 1 then
+        currentSpeed = currentSpeed - 1
+        print("قوة الاندفاع الحالية: " .. currentSpeed)
     end
 end)
 
--- 4. رادار البيض (ESP)
 createButton("تفعيل رادار البيض (ESP) 👁️", function()
     pcall(function()
-        local count = 0
         for _, obj in pairs(workspace:GetDescendants()) do
             local name = obj.Name:lower()
             if (name:find("egg") or name:find("collect")) and (obj:IsA("BasePart") or obj:IsA("Model")) then
@@ -158,30 +142,25 @@ createButton("تفعيل رادار البيض (ESP) 👁️", function()
                     hl.FillColor = Color3.fromRGB(0, 255, 120)
                     hl.OutlineColor = Color3.fromRGB(255, 255, 255)
                     hl.Parent = obj
-                    count = count + 1
                 end
             end
         end
     end)
 end)
 
--- محرك الفيزياء للسرعات الفلكية مع منع أي كيك
-RunService.RenderStepped:Connect(function()
+-- محرك الدفع المباشر للإحداثيات (CFrame Force Offset)
+RunService.RenderStepped:Connect(function(dt)
     if speedEnabled then
         pcall(function()
             local char = LocalPlayer.Character
             if char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChild("Humanoid") then
                 if char.Humanoid.MoveDirection.Magnitude > 0 then
-                    local currentVel = char.HumanoidRootPart.AssemblyLinearVelocity
-                    char.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(
-                        char.Humanoid.MoveDirection.X * currentSpeed,
-                        currentVel.Y,
-                        char.Humanoid.MoveDirection.Z * currentSpeed
-                    )
+                    local hrp = char.HumanoidRootPart
+                    hrp.CFrame = hrp.CFrame + (char.Humanoid.MoveDirection * (currentSpeed * dt * 60))
                 end
             end
         end)
     end
 end)
 
-print("تم تفعيل Vanta Hub بالسرعات الصاروخية المطلقة!")
+print("تم تفعيل نظام الدفع المباشر للسرعة!")
