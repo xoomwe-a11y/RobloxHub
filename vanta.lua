@@ -1,4 +1,4 @@
--- [[ VANTA - Roblox Universal Hub (With Speed Slider & UI Toggle) ]] --
+-- [[ VANTA - Roblox Universal Hub (Direct Execution) ]] --
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -7,7 +7,6 @@ local CoreGui = game:GetService("CoreGui")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
--- إزالة الواجهة القديمة إن وجدت لمنع التكرار
 if CoreGui:FindFirstChild("VantaHub") then
 	CoreGui.VantaHub:Destroy()
 end
@@ -36,7 +35,7 @@ Title.Text = "VANTA - Universal Hub"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 18
 
--- زر إغلاق / إخفاء القائمة (Minimize / Toggle UI)
+-- زر إخفاء وإظهار القائمة
 local ToggleUiBtn = Instance.new("TextButton")
 ToggleUiBtn.Parent = MainFrame
 ToggleUiBtn.BackgroundColor3 = Color3.fromRGB(120, 40, 40)
@@ -58,7 +57,6 @@ ToggleUiBtn.MouseButton1Click:Connect(function()
 	MainFrame.Size = uiVisible and UDim2.new(0, 300, 0, 440) or UDim2.new(0, 300, 0, 85)
 end)
 
--- دالة مساعدة للأزرار العادية
 local function createButton(name, posY, callback)
 	local btn = Instance.new("TextButton")
 	btn.Parent = MainFrame
@@ -84,7 +82,7 @@ local function createButton(name, posY, callback)
 	end)
 end
 
--- دالة إنشاء شريط التحكم في السرعة (Speed Slider Bar)
+-- بار التحكم بالسرعة (Speed Slider)
 local currentSpeed = 16
 local speedEnabled = false
 
@@ -147,7 +145,7 @@ local function createSlider(name, posY, min, max, callback)
 	end)
 end
 
--- 1. نظام الـ ESP
+-- 1. ESP
 local espEnabled = false
 local espObjects = {}
 
@@ -192,7 +190,7 @@ RunService.RenderStepped:Connect(function()
 end)
 createButton("Toggle ESP", 95, toggleESP)
 
--- 2. نظام الـ Aimbot
+-- 2. Aimbot
 local aimbotEnabled = false
 createButton("Toggle Aimbot", 145, function(state)
 	aimbotEnabled = state
@@ -222,11 +220,11 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 
--- 3. نظام الـ Noclip
+-- 3. Noclip
 local noclipConnection
 createButton("Toggle Noclip", 195, function(state)
 	if state then
-		noclipConnection = RunService.Stepped:Connect(function()
+		noclipConnection = RunService.Stepped:Connect(function`()
 			if LocalPlayer.Character then
 				for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
 					if part:IsA("BasePart") then
@@ -242,7 +240,7 @@ createButton("Toggle Noclip", 195, function(state)
 	end
 end)
 
--- 4. زر تفعيل السرعة + بار التحكم (Slider)
+-- 4. Speed Hack & Slider
 createButton("Enable Speed Hack", 245, function(state)
 	speedEnabled = state
 end)
@@ -261,7 +259,7 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 
--- 5. القفز العالي
+-- 5. Jump
 local jumpEnabled = false
 createButton("Toggle Jump (150)", 360, function(state)
 	jumpEnabled = state
