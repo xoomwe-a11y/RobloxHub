@@ -1,7 +1,7 @@
--- [[ Vanta Hub : Balanced Safe Speed for Egg Delivery ]] --
+-- [[ Vanta Hub : Smooth Tween Delivery (Bypasses Egg Return) ]] --
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 
 if CoreGui:FindFirstChild("VantaHubMain") then
@@ -18,7 +18,7 @@ MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
 MainFrame.BorderSizePixel = 0
 MainFrame.Position = UDim2.new(0.5, -160, 0.5, -130)
-MainFrame.Size = UDim2.new(0, 320, 0, 240)
+MainFrame.Size = UDim2.new(0, 320, 0, 220)
 MainFrame.Active = true
 MainFrame.Draggable = true
 
@@ -42,7 +42,7 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0.04, 0, 0, 0)
 Title.Size = UDim2.new(0.8, 0, 1, 0)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "Vanta Hub ⚡ [Smart Speed]"
+Title.Text = "Vanta Hub ⚡ [Smooth Teleport]"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -70,7 +70,7 @@ Container.Parent = MainFrame
 Container.BackgroundTransparency = 1
 Container.Position = UDim2.new(0, 10, 0, 50)
 Container.Size = UDim2.new(1, -20, 1, -60)
-Container.CanvasSize = UDim2.new(0, 0, 1.2, 0)
+Container.CanvasSize = UDim2.new(0, 0, 1.1, 0)
 Container.ScrollBarThickness = 4
 
 local UIListLayout = Instance.new("UIListLayout")
@@ -101,20 +101,38 @@ local function createButton(text, callback)
     return btn
 end
 
-local speedEnabled = false
-local currentSpeed = 35 -- سرعة سريعة لكنها لا تثير شك السيرفر مع البيض
-
-local SpeedToggleBtn = createButton("السرعة الذكية: [ متوقف ❌ ]", function()
-    speedEnabled = not speedEnabled
-    if speedEnabled then
-        SpeedToggleBtn.Text = "السرعة الذكية: [ شغال 🔥 ] (" .. currentSpeed .. ")"
-        SpeedToggleBtn.TextColor3 = Color3.fromRGB(100, 255, 100)
-    else
-        SpeedToggleBtn.Text = "السرعة الذكية: [ متوقف ❌ ]"
-        SpeedToggleBtn.TextColor3 = Color3.fromRGB(230, 230, 230)
+-- دالة النقل السلس (Tween) لمنع طرد البيضة
+local function smoothMoveTo(targetCFrame)
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        local hrp = char.HumanoidRootPart
+        local distance = (hrp.Position - targetCFrame.Position).Magnitude
+        local speed = 100 -- سرعة السحب الناعم
+        local duration = distance / speed
+        
+        local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Linear)
+        local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
+        tween:Play()
     end
+end
+
+-- زر سحب الشخصية لأقرب بيضة أو هدف بدون كسر اللعبة
+createButton("جلب البيضة / الانتقال السريع الآمن 🎯", function()
+    pcall(function()
+        for _, obj in pairs(workspace:GetDescendants()) do
+            local name = obj.Name:lower()
+            if (name:find("egg") or name:find("collect")) and (obj:IsA("BasePart") or obj:IsA("Model")) then
+                local targetPart = obj:IsA("Model") and obj.PrimaryPart or obj
+                if targetPart then
+                    smoothMoveTo(targetPart.CFrame + Vector3.new(0, 3, 0))
+                    break
+                end
+            end
+        end
+    end)
 end)
 
+-- رادار البيض (ESP)
 createButton("تفعيل رادار البيض (ESP) 👁️", function()
     pcall(function()
         for _, obj in pairs(workspace:GetDescendants()) do
@@ -134,16 +152,4 @@ createButton("تفعيل رادار البيض (ESP) 👁️", function()
     end)
 end)
 
--- تعديل الـ WalkSpeed بالطريقة الكلاسيكية الآمنة للبيض بدل القفزات الوهمية
-RunService.Heartbeat:Connect(function()
-    if speedEnabled then
-        pcall(function()
-            local char = LocalPlayer.Character
-            if char and char:FindFirstChild("Humanoid") then
-                char.Humanoid.WalkSpeed = currentSpeed
-            end
-        end)
-    end
-end)
-
-print("تم تفعيل نظام السرعة المتوازنة لتجنب خسارة البيض!")
+print("تم تفعيل نظام التحبيب السلس لتجاوز حماية البيض!")
