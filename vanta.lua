@@ -1,5 +1,4 @@
--- [[ VANTA - Roblox Universal Hub ]] --
--- Luau (Roblox Exploit Compatible)
+-- [[ VANTA - Roblox Universal Hub (Fixed Speed & Jump) ]] --
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -8,7 +7,11 @@ local CoreGui = game:GetService("CoreGui")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
--- إعداد الواجهة الرئيسية (UI Hub)
+-- إزالة الواجهة القديمة إن وجدت لمنع التكرار
+if CoreGui:FindFirstChild("VantaHub") then
+	CoreGui.VantaHub:Destroy()
+end
+
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "VantaHub"
 ScreenGui.Parent = CoreGui
@@ -33,7 +36,7 @@ Title.Text = "VANTA - Universal Hub"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 18
 
--- دالة مساعدة لإنشاء الأزرار
+-- دالة الأزرار
 local function createButton(name, posY, callback)
 	local btn = Instance.new("TextButton")
 	btn.Parent = MainFrame
@@ -59,7 +62,7 @@ local function createButton(name, posY, callback)
 	end)
 end
 
--- 1. نظام الـ ESP (كشف اللاعبين)
+-- 1. ESP
 local espEnabled = false
 local espObjects = {}
 
@@ -75,7 +78,6 @@ end
 
 RunService.RenderStepped:Connect(function()
 	if not espEnabled then return end
-	
 	for _, player in ipairs(Players:GetPlayers()) do
 		if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
 			local hrp = player.Character.HumanoidRootPart
@@ -103,10 +105,9 @@ RunService.RenderStepped:Connect(function()
 		end
 	end
 end)
-
 createButton("Toggle ESP", 55, toggleESP)
 
--- 2. نظام الـ Aimbot (التصويب التلقائي عند الضغط على الزر الأيمن للفأرة)
+-- 2. Aimbot
 local aimbotEnabled = false
 createButton("Toggle Aimbot", 105, function(state)
 	aimbotEnabled = state
@@ -136,7 +137,7 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 
--- 3. نظام الـ Noclip (المرور من الجدران)
+-- 3. Noclip
 local noclipConnection
 createButton("Toggle Noclip", 155, function(state)
 	if state then
@@ -156,16 +157,34 @@ createButton("Toggle Noclip", 155, function(state)
 	end
 end)
 
--- 4. تعديل السرعة (Speed Boost)
+-- 4. Speed Boost (محدث ليعمل بشكل مستمر)
+local speedEnabled = false
 createButton("Toggle Speed (50)", 205, function(state)
-	if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-		LocalPlayer.Character.Humanoid.WalkSpeed = state and 50 or 16
+	speedEnabled = state
+end)
+
+RunService.RenderStepped:Connect(function()
+	if speedEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+		LocalPlayer.Character.Humanoid.WalkSpeed = 50
+	elseif not speedEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+		if LocalPlayer.Character.Humanoid.WalkSpeed == 50 then
+			LocalPlayer.Character.Humanoid.WalkSpeed = 16
+		end
 	end
 end)
 
--- 5. القفز العالي (High Jump)
-createButton("Toggle Jump (100)", 255, function(state)
-	if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-		LocalPlayer.Character.Humanoid.JumpPower = state and 150 or 50
+-- 5. High Jump (محدث ليعمل بشكل مستمر)
+local jumpEnabled = false
+createButton("Toggle Jump (150)", 255, function(state)
+	jumpEnabled = state
+end)
+
+RunService.RenderStepped:Connect(function()
+	if jumpEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+		LocalPlayer.Character.Humanoid.JumpPower = 150
+	elseif not jumpEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+		if LocalPlayer.Character.Humanoid.JumpPower == 150 then
+			LocalPlayer.Character.Humanoid.JumpPower = 50
+		end
 	end
 end)
