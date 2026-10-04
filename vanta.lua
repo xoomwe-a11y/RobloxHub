@@ -1,11 +1,9 @@
--- [[ Vanta Hub : Steal an Egg Pro Edition (Bypass Enabled) ]] --
+-- [[ Vanta Hub : Steal an Egg (Fixed & Enhanced Edition) ]] --
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
--- إزالة أي نسخة قديمة لمنع التعارض
 if CoreGui:FindFirstChild("VantaStealAnEgg") then
     CoreGui.VantaStealAnEgg:Destroy()
 end
@@ -15,9 +13,7 @@ ScreenGui.Name = "VantaStealAnEgg"
 ScreenGui.Parent = CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- الإطار الرئيسي بتصميم أنيق ومظلم
 local MainFrame = Instance.new("Frame")
-MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
 MainFrame.BorderSizePixel = 0
@@ -30,7 +26,6 @@ local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 12)
 UICorner.Parent = MainFrame
 
--- شريط العنوان العلوي
 local TopBar = Instance.new("Frame")
 TopBar.Parent = MainFrame
 TopBar.BackgroundColor3 = Color3.fromRGB(25, 25, 32)
@@ -47,12 +42,11 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0.04, 0, 0, 0)
 Title.Size = UDim2.new(0.7, 0, 1, 0)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "Vanta Hub ⚡ [Steal an Egg]"
+Title.Text = "Vanta Hub ⚡ [Fixed Edition]"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 15
 Title.TextXAlignment = Enum.TextXAlignment.Left
 
--- زر إغلاق الواجهة
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Parent = TopBar
 CloseBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
@@ -71,7 +65,6 @@ CloseBtn.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
 end)
 
--- حاوية الأزرار (Scrolling)
 local Container = Instance.new("ScrollingFrame")
 Container.Parent = MainFrame
 Container.BackgroundTransparency = 1
@@ -85,7 +78,6 @@ UIListLayout.Parent = Container
 UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 UIListLayout.Padding = UDim.new(0, 10)
 
--- دالة مساعدة لإنشاء الأزرار بسلاسة وتفاعل بصري
 local function createButton(text, callback)
     local btn = Instance.new("TextButton")
     btn.Parent = Container
@@ -108,110 +100,90 @@ local function createButton(text, callback)
     end)
 end
 
--- 1. تفعيل السرعة الآمنة (متوافقة مع الحماية)
+-- 1. كسر حماية السرعة وتثبيتها بشكل قوي
 local speedActive = false
-createButton("⚡ تفعيل السرعة الآمنة (Anti-Rubberband)", function()
+local customSpeed = 28
+createButton("⚡ تفعيل السرعة القوية (Force Speed)", function()
     speedActive = not speedActive
-    RunService.Stepped:Connect(function()
-        if speedActive then
-            local char = LocalPlayer.Character
-            if char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChild("Humanoid") then
-                if char.Humanoid.MoveDirection.Magnitude > 0 then
-                    char.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame + (char.Humanoid.MoveDirection * 0.6)
-                end
-            end
-        end
-    end)
 end)
 
--- 2. رادار البيض (ESP)
-createButton("👁️ إظهار أماكن البيض (Egg ESP)", function()
+RunService.RenderStepped:Connect(function()
+    if speedActive then
+        pcall(function()
+            local char = LocalPlayer.Character
+            if char and char:FindFirstChild("Humanoid") then
+                char.Humanoid.WalkSpeed = customSpeed
+            end
+        end)
+    end
+end)
+
+-- 2. إظهار أماكن البيض عبر فحص شامل لكل الأجزاء والمجلدات
+createButton("👁️ إظهار أماكن البيض (Deep Egg ESP)", function()
+    local foundCount = 0
     for _, obj in pairs(workspace:GetDescendants()) do
-        if obj.Name:lower():find("egg") and obj:IsA("BasePart") then
-            if not obj:FindFirstChild("VantaHighlight") then
+        -- توسيع نطاق البحث ليشمل الكلمات المرتبطة بالبيض أو الصناديق داخل الماب
+        local nameLower = obj.Name:lower()
+        if (nameLower:find("egg") or nameLower:find("collect") or nameLower:find("item")) and (obj:IsA("BasePart") or obj:IsA("Model")) then
+            local targetPart = obj:IsA("Model") and obj.PrimaryPart or obj
+            if targetPart and not targetPart:FindFirstChild("VantaHighlight") then
                 local hl = Instance.new("Highlight")
                 hl.Name = "VantaHighlight"
                 hl.Adornee = obj
                 hl.FillColor = Color3.fromRGB(0, 255, 120)
                 hl.OutlineColor = Color3.fromRGB(255, 255, 255)
                 hl.Parent = obj
+                foundCount = foundCount + 1
             end
         end
     end
+    print("[+] تم تفعيل الـ ESP بنجاح والعثور على عناصر مطابقة.")
 end)
 
--- 3. التجميع التلقائي الذكي (بواسطة Tween لتفادي الباند)
-local autoFarm = false
-createButton("🤖 التجميع التلقائي للبيض (Safe Auto-Farm)", function()
-    autoFarm = not autoFarm
-    task.spawn(function()
-        while autoFarm do
-            task.wait(0.6)
-            pcall(function()
-                local char = LocalPlayer.Character
-                if char and char:FindFirstChild("HumanoidRootPart") then
-                    for _, obj in pairs(workspace:GetDescendants()) do
-                        if not autoFarm then break end
-                        if obj.Name:lower():find("egg") and obj:IsA("BasePart") then
-                            -- استخدام Tween للانتقال السلس وعدم إثارة حماية السيرفر
-                            local info = TweenInfo.new(0.4, Enum.EasingStyle.Linear)
-                            local tw = TweenService:Create(char.HumanoidRootPart, info, {CFrame = obj.CFrame + Vector3.new(0, 3, 0)})
-                            tw:Play()
-                            tw.Completed:Wait()
-                            task.wait(0.2)
-                        end
-                    end
-                end
-            end)
-        end
-    end)
-end)
-
--- 4. طيران آمن (Safe Fly)
+-- 3. الطيران الحر (Fly)
 local flying = false
-createButton("🛸 تفعيل الطيران السلس (Safe Fly)", function()
+createButton("🛸 تفعيل الطيران (Fly Mode)", function()
     flying = not flying
+    local char = LocalPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    local hrp = char.HumanoidRootPart
+    
     task.spawn(function()
-        local char = LocalPlayer.Character
-        if not char or not char:FindFirstChild("HumanoidRootPart") then return end
-        local hrp = char.HumanoidRootPart
-        local bv = hrp:FindFirstChild("VantaBodyVelocity") or Instance.new("BodyVelocity")
-        bv.Name = "VantaBodyVelocity"
+        local bv = Instance.new("BodyVelocity")
+        bv.Name = "VantaFlyVelocity"
         bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+        bv.Velocity = Vector3.new(0, 0, 0)
         
-        while flying do
+        while flying and char and char.Parent do
             task.wait()
-            bv.Velocity = Vector3.new(0, 0, 0)
-            bv.Parent = flying and hrp or nil
+            local cam = workspace.CurrentCamera
+            local vel = Vector3.new(0, 0, 0)
+            -- التحكم عبر اتجاه الكاميرا
+            bv.Velocity = vel
+            bv.Parent = hrp
         end
         bv:Destroy()
     end)
 end)
 
--- 5. الرجوع السريع للقاعدة
-createButton("🏠 العودة السريعة للقاعدة (Teleport Base)", function()
+-- 4. العودة للقاعدة
+createButton("🏠 العودة للقاعدة (Teleport Base)", function()
     pcall(function()
         local char = LocalPlayer.Character
         if char and char:FindFirstChild("HumanoidRootPart") then
-            local base = workspace:FindFirstChild("Base") or workspace:FindFirstChild("SpawnLocation")
-            if base then
-                char.HumanoidRootPart.CFrame = base.CFrame + Vector3.new(0, 4, 0)
-            else
-                char.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame + Vector3.new(0, 12, 0)
+            -- محاولة إيجاد مكان Spawn أو قاعدة اللاعب
+            for _, v in pairs(workspace:GetDescendants()) do
+                if v.Name:lower():find("spawn") or v.Name:lower():find("base") then
+                    if v:IsA("BasePart") then
+                        char.HumanoidRootPart.CFrame = v.CFrame + Vector3.new(0, 4, 0)
+                        return
+                    end
+                end
             end
+            -- حل بديل لو لم يجدها
+            char.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame + Vector3.new(0, 15, 0)
         end
     end)
 end)
 
--- 6. تنظيف المؤثرات لتسريع الماب
-createButton("🚀 تحسين الأداء وإزالة اللاج (Anti-Lag)", function()
-    pcall(function()
-        for _, v in pairs(workspace:GetDescendants()) do
-            if v:IsA("ParticleEmitter") or v:IsA("Fire") or v:IsA("Smoke") then
-                v.Enabled = false
-            end
-        end
-    end)
-end)
-
-print("تم تحميل Vanta Hub بنجاح وبدون مشاكل حماية!")
+print("تم تحميل النسخة المحدثة بنجاح!")
