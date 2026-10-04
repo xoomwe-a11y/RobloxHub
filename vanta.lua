@@ -1,4 +1,4 @@
--- [[ VANTA - Roblox Universal Hub (Anti-Cheat Bypass Speed) ]] --
+-- [[ VANTA - Roblox Universal Hub (Ultimate Anti-Cheat Bypass) ]] --
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -276,22 +276,24 @@ createButton("Toggle Noclip", 190, function(state)
 	end
 end)
 
--- 4. Speed Hack الآمن (طريقة CFrame لتجنب الإرجاع)
+-- 4. السرعة الآمنة المانعة للإرجاع (Bypass Anti-Cheat Speed)
 createButton("Enable Speed Hack", 235, function(state)
 	speedEnabled = state
 end)
 
-createSlider("Speed Value", 285, 16, 2500, function(val)
+createSlider("Speed Value", 285, 16, 500, function(val)
 	currentSpeed = val
 end)
 
-RunService.Heartbeat:Connect(function(dt)
-	if speedEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and LocalPlayer.Character:FindFirstChild("Humanoid") then
-		local hrp = LocalPlayer.Character.HumanoidRootPart
-		local hum = LocalPlayer.Character.Humanoid
-		if hum.MoveDirection.Magnitude > 0 then
-			-- استخدام CFrame لمنع نظام الحماية من كشف السرعة وإرجاعك
-			hrp.CFrame = hrp.CFrame + (hum.MoveDirection * (currentSpeed * dt))
+RunService.RenderStepped:Connect(function()
+	if speedEnabled and LocalPlayer.Character then
+		local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+		local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+		if humanoid and hrp then
+			-- تعطيل التحقق باختراق WalkSpeed التقليدي واستخدام تلاعب نظيف بالـ MoveDirection
+			if humanoid.MoveDirection.Magnitude > 0 then
+				hrp.CFrame = hrp.CFrame + (humanoid.MoveDirection * (currentSpeed * 0.05))
+			end
 		end
 	end
 end)
