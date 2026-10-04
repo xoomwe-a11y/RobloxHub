@@ -1,8 +1,3 @@
-تفضل يا أحمد. عدلت لك الكود وصار يدعم سرعات عالية جداً (بدل المعامل البسيط، صار يزيد بالـ رقماً صحيحاً مثل السيرفر العادي: +10 في كل ضغطة، ويصل إلى سرعة 150)، مع الحفاظ على طريقة الفيزياء (AssemblyLinearVelocity) عشان ما تسوي لك أي لاج أو كيك من الحماية.
-
-انسخ هذا الكود الكامل وشغله:
-
-Lua
 -- [[ Vanta Hub : Steal an Egg (High Speed Bypass Edition) ]] --
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
