@@ -188,4 +188,4 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
-print("تم تفعيل بار التحكم بالسرعة بنجاح!")
+print("تم تفعيل بار التحكم بالسرعة بنجاح!"))
