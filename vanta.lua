@@ -1,4 +1,4 @@
--- Egg Hunt Auto-Farm & Speed Hack (Bypass Protection)
+-- Anti-AFK, Stealth Speed Bypass & Auto Egg Steal
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
@@ -17,17 +17,17 @@ ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
 Frame.Parent = ScreenGui
-Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 Frame.BorderSizePixel = 0
 Frame.Position = UDim2.new(0.05, 0, 0.35, 0)
-Frame.Size = UDim2.new(0, 230, 0, 210)
+Frame.Size = UDim2.new(0, 240, 0, 220)
 Frame.Active = true
 Frame.Draggable = true
 
 Title.Parent = Frame
-Title.Size = UDim2.new(1, 0, 0, 30)
-Title.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-Title.Text = "Egg Hunt | Speed & Auto Farm"
+Title.Size = UDim2.new(1, 0, 0, 32)
+Title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Title.Text = "Egg Hunt | Anti-Rubberband"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 13
 Title.Font = Enum.Font.SourceSansBold
@@ -47,7 +47,7 @@ SpeedSlider.Parent = Frame
 SpeedSlider.Position = UDim2.new(0.68, 0, 0.2, 0)
 SpeedSlider.Size = UDim2.new(0.24, 0, 0.2, 0)
 SpeedSlider.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-SpeedSlider.Text = "32"
+SpeedSlider.Text = "45" -- سرعة موصى بها لتفادي الـ Rubberband في الليل
 SpeedSlider.TextColor3 = Color3.fromRGB(255, 255, 255)
 SpeedSlider.TextSize = 13
 SpeedSlider.Font = Enum.Font.SourceSansBold
@@ -63,28 +63,34 @@ AutoFarmToggle.TextSize = 13
 AutoFarmToggle.Font = Enum.Font.SourceSansBold
 
 StatusLabel.Parent = Frame
-StatusLabel.Position = UDim2.new(0, 0, 0.78, 0)
-StatusLabel.Size = UDim2.new(1, 0, 0, 35)
+StatusLabel.Position = UDim2.new(0, 0, 0.75, 0)
+StatusLabel.Size = UDim2.new(1, 0, 0, 45)
 StatusLabel.BackgroundTransparency = 1
-StatusLabel.Text = "Status: Idle\nAnti-AFK: Enabled"
-StatusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+StatusLabel.Text = "Status: Bypass Active\nRecommended Night Speed: 35-50"
+StatusLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
 StatusLabel.TextSize = 11
 StatusLabel.Font = Enum.Font.SourceSans
 
 -- Variables
 local SpeedEnabled = false
 local AutoFarmEnabled = false
-local TargetSpeed = 32
+local TargetSpeed = 45
 
--- Safe Speed System (CFrame Vector Movement - Anti-Kick)
-RunService.Heartbeat:Connect(function(delta)
+-- Anti-Rubberband Velocity Movement Bypass
+RunService.PreRender:Connect(function()
     if SpeedEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        local humanoid = LocalPlayer.Character.Humanoid
         local hrp = LocalPlayer.Character.HumanoidRootPart
+        local moveDir = LocalPlayer.Character.Humanoid.MoveDirection
         
-        if humanoid.MoveDirection.Magnitude > 0 then
-            -- تحريك الشخصية عن طريق الإحداثيات لمنع كشف تعديل WalkSpeed المباشر
-            hrp.CFrame = hrp.CFrame + (humanoid.MoveDirection * (TargetSpeed - 16) * delta)
+        if moveDir.Magnitude > 0 then
+            -- تعديل السرعة مع إضافة خفض خفيف جداً متذبذب لمنع كشف الـ Teleport في الليل
+            local jitter = (math.random(-5, 5) / 10)
+            local currentVel = hrp.AssemblyLinearVelocity
+            hrp.AssemblyLinearVelocity = Vector3.new(
+                moveDir.X * (TargetSpeed + jitter),
+                currentVel.Y,
+                moveDir.Z * (TargetSpeed + jitter)
+            )
         end
     end
 end)
@@ -104,7 +110,7 @@ end)
 SpeedSlider.FocusLost:Connect(function()
     local val = tonumber(SpeedSlider.Text)
     if val then
-        TargetSpeed = math.clamp(val, 16, 80) -- السرعة الآمنة بين 16 و 80
+        TargetSpeed = math.clamp(val, 16, 70)
         SpeedSlider.Text = tostring(TargetSpeed)
     else
         SpeedSlider.Text = tostring(TargetSpeed)
@@ -120,7 +126,6 @@ local function GetClosestEgg()
     if not hrp then return nil end
 
     for _, v in ipairs(workspace:GetDescendants()) do
-        -- البحث عن البيض في الماب (عبر الأسماء الشائعة أو الكائنات التي تحتوي على كلمة Egg)
         if v:IsA("BasePart") and (v.Name:lower():find("egg") or (v.Parent and v.Parent.Name:lower():find("egg"))) then
             local dist = (hrp.Position - v.Position).Magnitude
             if dist < shortestDistance then
@@ -135,15 +140,13 @@ end
 -- Auto Farm Loop
 task.spawn(function()
     while true do
-        task.wait(0.5)
+        task.wait(0.6)
         if AutoFarmEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
             local targetEgg = GetClosestEgg()
             if targetEgg then
                 StatusLabel.Text = "Status: Stealing Egg..."
-                -- الانتقال السلس للبيضة لمنع الطرد
                 LocalPlayer.Character.HumanoidRootPart.CFrame = targetEgg.CFrame + Vector3.new(0, 2, 0)
                 
-                -- التفاعل المباشر إذا كان هناك Prompt
                 for _, prompt in ipairs(targetEgg:GetDescendants()) do
                     if prompt:IsA("ProximityPrompt") then
                         fireproximityprompt(prompt)
@@ -159,16 +162,15 @@ end)
 AutoFarmToggle.MouseButton1Click:Connect(function()
     AutoFarmEnabled = not AutoFarmEnabled
     if AutoFarmEnabled then
-        AutoFarmToggle.Text = "Auto Steal Eggs: ON"
+        AutoFarmToggle.Text = "Auto Steal: ON"
         AutoFarmToggle.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
     else
-        AutoFarmToggle.Text = "Auto Steal Eggs: OFF"
+        AutoFarmToggle.Text = "Auto Steal: OFF"
         AutoFarmToggle.BackgroundColor3 = Color3.fromRGB(231, 76, 60)
-        StatusLabel.Text = "Status: Idle\nAnti-AFK: Enabled"
     end
 end)
 
--- Anti-AFK Background Protection
+-- Anti-AFK
 LocalPlayer.Idled:Connect(function()
     VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 1)
     task.wait(0.05)
