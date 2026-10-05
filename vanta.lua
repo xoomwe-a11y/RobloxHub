@@ -1,7 +1,6 @@
--- Anti-AFK + Fast Solo Server Finder (Page Cursor Scan)
-local HttpService = game:GetService("HttpService")
-local TeleportService = game:GetService("TeleportService")
+-- Egg Hunt Auto-Farm & Speed Hack (Bypass Protection)
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local LocalPlayer = Players.LocalPlayer
 
@@ -9,8 +8,9 @@ local LocalPlayer = Players.LocalPlayer
 local ScreenGui = Instance.new("ScreenGui")
 local Frame = Instance.new("Frame")
 local Title = Instance.new("TextLabel")
-local ToggleBtn = Instance.new("TextButton")
-local SoloBtn = Instance.new("TextButton")
+local SpeedToggle = Instance.new("TextButton")
+local SpeedSlider = Instance.new("TextBox")
+local AutoFarmToggle = Instance.new("TextButton")
 local StatusLabel = Instance.new("TextLabel")
 
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
@@ -20,145 +20,157 @@ Frame.Parent = ScreenGui
 Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 Frame.BorderSizePixel = 0
 Frame.Position = UDim2.new(0.05, 0, 0.35, 0)
-Frame.Size = UDim2.new(0, 220, 0, 170)
+Frame.Size = UDim2.new(0, 230, 0, 210)
 Frame.Active = true
 Frame.Draggable = true
 
 Title.Parent = Frame
 Title.Size = UDim2.new(1, 0, 0, 30)
 Title.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-Title.Text = "Anti-AFK & Solo Server"
+Title.Text = "Egg Hunt | Speed & Auto Farm"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 14
+Title.TextSize = 13
 Title.Font = Enum.Font.SourceSansBold
 
-ToggleBtn.Parent = Frame
-ToggleBtn.Position = UDim2.new(0.1, 0, 0.25, 0)
-ToggleBtn.Size = UDim2.new(0.8, 0, 0.25, 0)
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
-ToggleBtn.Text = "Anti-AFK: ON"
-ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleBtn.TextSize = 14
-ToggleBtn.Font = Enum.Font.SourceSansBold
+-- Speed Toggle Button
+SpeedToggle.Parent = Frame
+SpeedToggle.Position = UDim2.new(0.08, 0, 0.2, 0)
+SpeedToggle.Size = UDim2.new(0.55, 0, 0.2, 0)
+SpeedToggle.BackgroundColor3 = Color3.fromRGB(231, 76, 60)
+SpeedToggle.Text = "Speed: OFF"
+SpeedToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+SpeedToggle.TextSize = 13
+SpeedToggle.Font = Enum.Font.SourceSansBold
 
-SoloBtn.Parent = Frame
-SoloBtn.Position = UDim2.new(0.1, 0, 0.55, 0)
-SoloBtn.Size = UDim2.new(0.8, 0, 0.25, 0)
-SoloBtn.BackgroundColor3 = Color3.fromRGB(52, 152, 219)
-SoloBtn.Text = "Join Solo Server"
-SoloBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-SoloBtn.TextSize = 14
-SoloBtn.Font = Enum.Font.SourceSansBold
+-- Speed Value Input
+SpeedSlider.Parent = Frame
+SpeedSlider.Position = UDim2.new(0.68, 0, 0.2, 0)
+SpeedSlider.Size = UDim2.new(0.24, 0, 0.2, 0)
+SpeedSlider.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+SpeedSlider.Text = "32"
+SpeedSlider.TextColor3 = Color3.fromRGB(255, 255, 255)
+SpeedSlider.TextSize = 13
+SpeedSlider.Font = Enum.Font.SourceSansBold
+
+-- Auto Farm Button
+AutoFarmToggle.Parent = Frame
+AutoFarmToggle.Position = UDim2.new(0.08, 0, 0.45, 0)
+AutoFarmToggle.Size = UDim2.new(0.84, 0, 0.2, 0)
+AutoFarmToggle.BackgroundColor3 = Color3.fromRGB(231, 76, 60)
+AutoFarmToggle.Text = "Auto Steal Eggs: OFF"
+AutoFarmToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+AutoFarmToggle.TextSize = 13
+AutoFarmToggle.Font = Enum.Font.SourceSansBold
 
 StatusLabel.Parent = Frame
-StatusLabel.Position = UDim2.new(0, 0, 0.83, 0)
-StatusLabel.Size = UDim2.new(1, 0, 0, 25)
+StatusLabel.Position = UDim2.new(0, 0, 0.78, 0)
+StatusLabel.Size = UDim2.new(1, 0, 0, 35)
 StatusLabel.BackgroundTransparency = 1
-StatusLabel.Text = "Status: Ready"
+StatusLabel.Text = "Status: Idle\nAnti-AFK: Enabled"
 StatusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-StatusLabel.TextSize = 12
+StatusLabel.TextSize = 11
 StatusLabel.Font = Enum.Font.SourceSans
 
-local Enabled = true
+-- Variables
+local SpeedEnabled = false
+local AutoFarmEnabled = false
+local TargetSpeed = 32
 
-ToggleBtn.MouseButton1Click:Connect(function()
-    Enabled = not Enabled
-    if Enabled then
-        ToggleBtn.Text = "Anti-AFK: ON"
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
-        StatusLabel.Text = "Status: Anti-AFK Active"
-    else
-        ToggleBtn.Text = "Anti-AFK: OFF"
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(231, 76, 60)
-        StatusLabel.Text = "Status: Anti-AFK Disabled"
+-- Safe Speed System (CFrame Vector Movement - Anti-Kick)
+RunService.Heartbeat:Connect(function(delta)
+    if SpeedEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local humanoid = LocalPlayer.Character.Humanoid
+        local hrp = LocalPlayer.Character.HumanoidRootPart
+        
+        if humanoid.MoveDirection.Magnitude > 0 then
+            -- تحريك الشخصية عن طريق الإحداثيات لمنع كشف تعديل WalkSpeed المباشر
+            hrp.CFrame = hrp.CFrame + (humanoid.MoveDirection * (TargetSpeed - 16) * delta)
+        end
     end
 end)
 
--- Request helper function
-local function GetRequest()
-    return (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
-end
-
--- Solo Server Logic with Cursor Pagination
-local function JoinSoloServer()
-    local req = GetRequest()
-    if not req then
-        StatusLabel.Text = "Error: Unsupported Executor"
-        return
+-- Speed Toggle Action
+SpeedToggle.MouseButton1Click:Connect(function()
+    SpeedEnabled = not SpeedEnabled
+    if SpeedEnabled then
+        SpeedToggle.Text = "Speed: ON"
+        SpeedToggle.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
+    else
+        SpeedToggle.Text = "Speed: OFF"
+        SpeedToggle.BackgroundColor3 = Color3.fromRGB(231, 76, 60)
     end
+end)
 
-    StatusLabel.Text = "Scanning lowest servers..."
-    SoloBtn.Text = "Scanning..."
+SpeedSlider.FocusLost:Connect(function()
+    local val = tonumber(SpeedSlider.Text)
+    if val then
+        TargetSpeed = math.clamp(val, 16, 80) -- السرعة الآمنة بين 16 و 80
+        SpeedSlider.Text = tostring(TargetSpeed)
+    else
+        SpeedSlider.Text = tostring(TargetSpeed)
+    end
+end)
 
-    local placeId = game.PlaceId
-    local currentJob = game.JobId
-    local cursor = ""
-    local targetServer = nil
+-- Auto Steal Egg Function
+local function GetClosestEgg()
+    local closest = nil
+    local shortestDistance = math.huge
+    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    
+    if not hrp then return nil end
 
-    -- Loop to fetch pages until we find low-player servers
-    for page = 1, 10 do
-        local url = "https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?sortOrder=Asc&limit=100"
-        if cursor ~= "" then
-            url = url .. "&cursor=" .. cursor
-        end
-
-        local success, res = pcall(function()
-            return req({Url = url, Method = "GET"})
-        end)
-
-        if success and res and res.Body then
-            local data = HttpService:JSONDecode(res.Body)
-            if data and data.data then
-                for _, server in ipairs(data.data) do
-                    if server.id ~= currentJob and server.playing <= 2 and server.playing < server.maxPlayers then
-                        targetServer = server.id
-                        break
-                    end
-                end
-
-                if targetServer then break end
-                cursor = data.nextPageCursor or ""
-                if cursor == "" then break end
-            else
-                break
+    for _, v in ipairs(workspace:GetDescendants()) do
+        -- البحث عن البيض في الماب (عبر الأسماء الشائعة أو الكائنات التي تحتوي على كلمة Egg)
+        if v:IsA("BasePart") and (v.Name:lower():find("egg") or (v.Parent and v.Parent.Name:lower():find("egg"))) then
+            local dist = (hrp.Position - v.Position).Magnitude
+            if dist < shortestDistance then
+                shortestDistance = dist
+                closest = v
             end
-        else
-            break
         end
-        task.wait(0.2)
     end
-
-    if targetServer then
-        StatusLabel.Text = "Teleporting..."
-        TeleportService:TeleportToPlaceInstance(placeId, targetServer, LocalPlayer)
-    else
-        StatusLabel.Text = "Retrying random jump..."
-        -- Fallback: If API scan fails, teleport to a random instance
-        TeleportService:Teleport(placeId, LocalPlayer)
-    end
+    return closest
 end
 
-SoloBtn.MouseButton1Click:Connect(function()
-    JoinSoloServer()
-end)
-
--- Anti-AFK Loop
+-- Auto Farm Loop
 task.spawn(function()
     while true do
-        task.wait(60)
-        if Enabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-            LocalPlayer.Character.Humanoid.Jump = true
-            VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
-            task.wait(0.1)
-            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
+        task.wait(0.5)
+        if AutoFarmEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local targetEgg = GetClosestEgg()
+            if targetEgg then
+                StatusLabel.Text = "Status: Stealing Egg..."
+                -- الانتقال السلس للبيضة لمنع الطرد
+                LocalPlayer.Character.HumanoidRootPart.CFrame = targetEgg.CFrame + Vector3.new(0, 2, 0)
+                
+                -- التفاعل المباشر إذا كان هناك Prompt
+                for _, prompt in ipairs(targetEgg:GetDescendants()) do
+                    if prompt:IsA("ProximityPrompt") then
+                        fireproximityprompt(prompt)
+                    end
+                end
+            else
+                StatusLabel.Text = "Status: Searching for eggs..."
+            end
         end
     end
 end)
 
-LocalPlayer.Idled:Connect(function()
-    if Enabled then
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 1)
-        task.wait(0.05)
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 1)
+AutoFarmToggle.MouseButton1Click:Connect(function()
+    AutoFarmEnabled = not AutoFarmEnabled
+    if AutoFarmEnabled then
+        AutoFarmToggle.Text = "Auto Steal Eggs: ON"
+        AutoFarmToggle.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
+    else
+        AutoFarmToggle.Text = "Auto Steal Eggs: OFF"
+        AutoFarmToggle.BackgroundColor3 = Color3.fromRGB(231, 76, 60)
+        StatusLabel.Text = "Status: Idle\nAnti-AFK: Enabled"
     end
+end)
+
+-- Anti-AFK Background Protection
+LocalPlayer.Idled:Connect(function()
+    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 1)
+    task.wait(0.05)
+    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 1)
 end)
