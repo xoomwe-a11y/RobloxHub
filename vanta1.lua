@@ -1,88 +1,136 @@
--- Anti-AFK with Custom GUI (Bypass Kick)
+-- Anti-AFK Stealth Bypass (Restructured)
 local Players = game:GetService("Players")
 local VirtualInputManager = game:GetService("VirtualInputManager")
+local VirtualUser = game:GetService("VirtualUser")
+
 local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
--- GUI Creation
-local ScreenGui = Instance.new("ScreenGui")
-local Frame = Instance.new("Frame")
-local Title = Instance.new("TextLabel")
-local ToggleBtn = Instance.new("TextButton")
-local StatusLabel = Instance.new("TextLabel")
+-- State Management
+local AntiAFKState = {
+    Enabled = true,
+    Interval = 120 -- Interval in seconds for background input simulation
+}
 
-ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-ScreenGui.ResetOnSpawn = false
+-- UI Theme Constants
+local THEME = {
+    Background = Color3.fromRGB(20, 20, 25),
+    Header = Color3.fromRGB(30, 30, 38),
+    Active = Color3.fromRGB(46, 204, 113),
+    Disabled = Color3.fromRGB(231, 76, 60),
+    TextPrimary = Color3.fromRGB(255, 255, 255),
+    TextMuted = Color3.fromRGB(180, 180, 180)
+}
 
-Frame.Parent = ScreenGui
-Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-Frame.BorderSizePixel = 0
-Frame.Position = UDim2.new(0.05, 0, 0.4, 0)
-Frame.Size = UDim2.new(0, 200, 0, 120)
-Frame.Active = true
-Frame.Draggable = true
+-- Helper Component Builder
+local function CreateElement(className, properties)
+    local instance = Instance.new(className)
+    for prop, val in pairs(properties) do
+        instance[prop] = val
+    end
+    return instance
+end
 
-Title.Parent = Frame
-Title.Size = UDim2.new(1, 0, 0, 30)
-Title.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-Title.Text = "Anti-AFK System"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 14
-Title.Font = Enum.Font.SourceSansBold
+-- Interface Initialization
+local ScreenGui = CreateElement("ScreenGui", {
+    Name = "AntiAFK_Refactored",
+    ResetOnSpawn = false,
+    Parent = PlayerGui
+})
 
-ToggleBtn.Parent = Frame
-ToggleBtn.Position = UDim2.new(0.1, 0, 0.35, 0)
-ToggleBtn.Size = UDim2.new(0.8, 0, 0.35, 0)
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
-ToggleBtn.Text = "ON"
-ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleBtn.TextSize = 16
-ToggleBtn.Font = Enum.Font.SourceSansBold
+local MainFrame = CreateElement("Frame", {
+    Name = "MainContainer",
+    Size = UDim2.new(0, 220, 0, 130),
+    Position = UDim2.new(0.05, 0, 0.4, 0),
+    BackgroundColor3 = THEME.Background,
+    BorderSizePixel = 0,
+    Active = true,
+    Draggable = true,
+    Parent = ScreenGui
+})
 
-StatusLabel.Parent = Frame
-StatusLabel.Position = UDim2.new(0, 0, 0.75, 0)
-StatusLabel.Size = UDim2.new(1, 0, 0, 25)
-StatusLabel.BackgroundTransparency = 1
-StatusLabel.Text = "Status: Active"
-StatusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-StatusLabel.TextSize = 12
-StatusLabel.Font = Enum.Font.SourceSans
+CreateElement("UICorner", { CornerRadius = UDim.new(0, 8), Parent = MainFrame })
 
-local Enabled = true
+local TitleLabel = CreateElement("TextLabel", {
+    Name = "HeaderTitle",
+    Size = UDim2.new(1, 0, 0, 35),
+    BackgroundColor3 = THEME.Header,
+    Text = "Anti-AFK System",
+    TextColor3 = THEME.TextPrimary,
+    TextSize = 14,
+    Font = Enum.Font.SourceSansBold,
+    Parent = MainFrame
+})
 
-ToggleBtn.MouseButton1Click:Connect(function()
-    Enabled = not Enabled
-    if Enabled then
-        ToggleBtn.Text = "ON"
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
+CreateElement("UICorner", { CornerRadius = UDim.new(0, 8), Parent = TitleLabel })
+
+local ToggleButton = CreateElement("TextButton", {
+    Name = "ToggleAction",
+    Size = UDim2.new(0.8, 0, 0.32, 0),
+    Position = UDim2.new(0.1, 0, 0.38, 0),
+    BackgroundColor3 = THEME.Active,
+    Text = "Anti-AFK: ON",
+    TextColor3 = THEME.TextPrimary,
+    TextSize = 14,
+    Font = Enum.Font.SourceSansBold,
+    Parent = MainFrame
+})
+
+CreateElement("UICorner", { CornerRadius = UDim.new(0, 6), Parent = ToggleButton })
+
+local StatusLabel = CreateElement("TextLabel", {
+    Name = "StatusDisplay",
+    Size = UDim2.new(1, 0, 0, 25),
+    Position = UDim2.new(0, 0, 0.75, 0),
+    BackgroundTransparency = 1,
+    Text = "Status: Active",
+    TextColor3 = THEME.TextMuted,
+    TextSize = 12,
+    Font = Enum.Font.SourceSans,
+    Parent = MainFrame
+})
+
+-- UI Controller
+local function UpdateUIState()
+    if AntiAFKState.Enabled then
+        ToggleButton.Text = "Anti-AFK: ON"
+        ToggleButton.BackgroundColor3 = THEME.Active
         StatusLabel.Text = "Status: Active"
+        StatusLabel.TextColor3 = THEME.TextMuted
     else
-        ToggleBtn.Text = "OFF"
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(231, 76, 60)
+        ToggleButton.Text = "Anti-AFK: OFF"
+        ToggleButton.BackgroundColor3 = THEME.Disabled
         StatusLabel.Text = "Status: Disabled"
+        StatusLabel.TextColor3 = THEME.Disabled
+    end
+end
+
+ToggleButton.MouseButton1Click:Connect(function()
+    AntiAFKState.Enabled = not AntiAFKState.Enabled
+    UpdateUIState()
+end)
+
+-- Anti-AFK Engine (Stealth Key/Mouse Events without Humanoid Manipulation)
+local function TriggerStealthInput()
+    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 1)
+    task.wait(0.05)
+    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 1)
+end
+
+-- Catch Roblox's Idled Signal
+LocalPlayer.Idled:Connect(function()
+    if AntiAFKState.Enabled then
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new(0, 0))
     end
 end)
 
--- Anti-AFK Logic
+-- Interval Loop Routine
 task.spawn(function()
     while true do
-        task.wait(60) -- كل دقيقة يقوم بعمل حركة
-        if Enabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-            -- محاكاة القفز في اللعبة لمنع السيرفر من اعتبارك خامل
-            LocalPlayer.Character.Humanoid.Jump = true
-            
-            -- محاكاة ضغط زر مسافة عبر النواة
-            VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
-            task.wait(0.1)
-            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
+        task.wait(AntiAFKState.Interval)
+        if AntiAFKState.Enabled then
+            TriggerStealthInput()
         end
-    end
-end)
-
--- Prevent Disconnect
-LocalPlayer.Idled:Connect(function()
-    if Enabled then
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 1)
-        task.wait(0.05)
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 1)
     end
 end)
