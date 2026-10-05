@@ -1,4 +1,4 @@
--- Anti-AFK + Server Hopper to Solo Server
+-- Anti-AFK + Fast Solo Server Finder (Page Cursor Scan)
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local Players = game:GetService("Players")
@@ -32,7 +32,6 @@ Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 14
 Title.Font = Enum.Font.SourceSansBold
 
--- Anti-AFK Toggle Button
 ToggleBtn.Parent = Frame
 ToggleBtn.Position = UDim2.new(0.1, 0, 0.25, 0)
 ToggleBtn.Size = UDim2.new(0.8, 0, 0.25, 0)
@@ -42,7 +41,6 @@ ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 ToggleBtn.TextSize = 14
 ToggleBtn.Font = Enum.Font.SourceSansBold
 
--- Join Solo Server Button
 SoloBtn.Parent = Frame
 SoloBtn.Position = UDim2.new(0.1, 0, 0.55, 0)
 SoloBtn.Size = UDim2.new(0.8, 0, 0.25, 0)
@@ -76,52 +74,68 @@ ToggleBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Solo Server Finder Logic
+-- Request helper function
+local function GetRequest()
+    return (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
+end
+
+-- Solo Server Logic with Cursor Pagination
 local function JoinSoloServer()
-    StatusLabel.Text = "Searching for solo server..."
-    SoloBtn.Text = "Searching..."
-    
-    local placeId = game.PlaceId
-    local currentJobId = game.JobId
-    local req = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
-    
+    local req = GetRequest()
     if not req then
-        StatusLabel.Text = "Error: Executor unsupported"
-        SoloBtn.Text = "Join Solo Server"
+        StatusLabel.Text = "Error: Unsupported Executor"
         return
     end
 
-    local url = "https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?sortOrder=Asc&limit=100"
-    local success, response = pcall(function()
-        return req({Url = url, Method = "GET"})
-    end)
+    StatusLabel.Text = "Scanning lowest servers..."
+    SoloBtn.Text = "Scanning..."
 
-    if success and response and response.Body then
-        local data = HttpService:JSONDecode(response.Body)
-        if data and data.data then
-            for _, server in ipairs(data.data) do
-                if server.playing < server.maxPlayers and server.id ~= currentJobId then
-                    if server.playing == 1 or server.playing == 0 then
-                        StatusLabel.Text = "Teleporting..."
-                        TeleportService:TeleportToPlaceInstance(placeId, server.id, LocalPlayer)
-                        return
+    local placeId = game.PlaceId
+    local currentJob = game.JobId
+    local cursor = ""
+    local targetServer = nil
+
+    -- Loop to fetch pages until we find low-player servers
+    for page = 1, 10 do
+        local url = "https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?sortOrder=Asc&limit=100"
+        if cursor ~= "" then
+            url = url .. "&cursor=" .. cursor
+        end
+
+        local success, res = pcall(function()
+            return req({Url = url, Method = "GET"})
+        end)
+
+        if success and res and res.Body then
+            local data = HttpService:JSONDecode(res.Body)
+            if data and data.data then
+                for _, server in ipairs(data.data) do
+                    if server.id ~= currentJob and server.playing <= 2 and server.playing < server.maxPlayers then
+                        targetServer = server.id
+                        break
                     end
                 end
+
+                if targetServer then break end
+                cursor = data.nextPageCursor or ""
+                if cursor == "" then break end
+            else
+                break
             end
-            
-            -- If no 1-player server is found immediately, pick the smallest available server
-            for _, server in ipairs(data.data) do
-                if server.playing < server.maxPlayers and server.id ~= currentJobId then
-                    StatusLabel.Text = "Teleporting to low player server..."
-                    TeleportService:TeleportToPlaceInstance(placeId, server.id, LocalPlayer)
-                    return
-                end
-            end
+        else
+            break
         end
+        task.wait(0.2)
     end
-    
-    StatusLabel.Text = "Failed to find server"
-    SoloBtn.Text = "Join Solo Server"
+
+    if targetServer then
+        StatusLabel.Text = "Teleporting..."
+        TeleportService:TeleportToPlaceInstance(placeId, targetServer, LocalPlayer)
+    else
+        StatusLabel.Text = "Retrying random jump..."
+        -- Fallback: If API scan fails, teleport to a random instance
+        TeleportService:Teleport(placeId, LocalPlayer)
+    end
 end
 
 SoloBtn.MouseButton1Click:Connect(function()
